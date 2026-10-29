@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MonitorTv.App/MonitorTv.App.csproj" />
+    <Project Path="src/MonitorTv.Cli/MonitorTv.Cli.csproj" />
+    <Project Path="src/MonitorTv.Core/MonitorTv.Core.csproj" />
+  </Folder>
+</Solution>
