@@ -83,8 +83,8 @@ internal static class IconArt
     /// <summary>Only what survives at 16 px: a heavy monitor and a speaker.</summary>
     private static void Minimal(DrawingContext dc, Brush ink)
     {
-        Monitor(dc, ink, new Rect(44, 66, 168, 112), 16, 16);
-        SpeakerWithWaves(dc, ink, new Point(122, 122), 1.35, stroke: 12);
+        Monitor(dc, ink, new Rect(30, 52, 196, 136), 20, 22);
+        SpeakerWithWaves(dc, ink, new Point(128, 120), 1.7, stroke: 15);
     }
 
     /// <summary>A toggle where the stand would be: "flip between" without arrows.</summary>
@@ -178,6 +178,23 @@ internal static class IconArt
     {
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen()) Draw(dc, new Point(0, 0), size, size <= 24 ? 4 : 1);
+        var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
+        bmp.Render(visual);
+        bmp.Freeze();
+        return bmp;
+    }
+
+    /// <summary>The icon for a title bar: large, centred in a fixed-height box (the bar's own icon slot clips what overflows).</summary>
+    public static Wpf.Ui.Controls.IconElement TitleIcon() => new Wpf.Ui.Controls.ImageIcon
+    {
+        Source = Render(96), Width = 22, Height = 22, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -2, 0, 0),
+    };
+
+    /// <summary>The heavy variant at any size: for the tray, where the icon is 16-24 px and sits on a busy bar.</summary>
+    public static System.Windows.Media.Imaging.BitmapSource RenderSimple(int size)
+    {
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen()) Draw(dc, new Point(0, 0), size, 4);
         var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
         bmp.Render(visual);
         bmp.Freeze();

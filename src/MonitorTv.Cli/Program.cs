@@ -230,6 +230,15 @@ try
             Console.WriteLine($"TV input: {input}");
             break;
 
+        case ["tv", "request", ..]:
+            using (var tv = await LgTv.Connect(TvSettings.Load(), TimeSpan.FromSeconds(10)))
+            {
+                var body = args.Length > 3 ? System.Text.Json.Nodes.JsonNode.Parse(args[3])?.AsObject() : null;
+                try { Console.WriteLine((await tv.Request(args[2], body)).ToJsonString()); }
+                catch (Exception ex) { Console.WriteLine("ERROR: " + ex.Message); }
+            }
+            break;
+
         case ["tv", "on"]:
             LgTv.WakeOnLan(TvSettings.Load().Mac);
             Console.WriteLine("Wake-on-LAN sent.");

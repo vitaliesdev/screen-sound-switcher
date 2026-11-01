@@ -28,19 +28,19 @@ public sealed class HelpWindow : FluentWindow
         }
 
         Section(Loc.T("Perfiles"),
-            Loc.T("Un perfil guarda cómo están tus pantallas (cuáles están encendidas y dónde) y por qué salida suena el sonido. Coloca todo en Windows como lo quieres y pulsa «Crear con los monitores actuales»."));
+            Loc.T("Un perfil guarda tus pantallas (cuáles y dónde) y la salida de sonido. Colócalo todo en Windows y pulsa «Crear con los monitores actuales»."));
         Section(Loc.T("Aplicarlo"),
-            Loc.T("Desde la lista con «Aplicar perfil», desde el icono de la bandeja o con su atajo de teclado, que funciona con la ventana cerrada. Si el perfil puede dejarte sin imagen, verás una cuenta atrás: si no pulsas «Mantener», vuelve la disposición anterior. Puedes cambiar cuándo se pregunta en el engranaje de ajustes."));
+            Loc.T("Desde la lista, la bandeja o su atajo (funciona con la ventana cerrada). Si el perfil puede dejarte sin imagen, verás una cuenta atrás: sin «Mantener», vuelve la disposición anterior."));
         Section(Loc.T("Si te quedas sin imagen"),
-            Loc.T("No hagas nada unos segundos: la disposición anterior vuelve sola. También puedes pulsar {0} en cualquier momento para restaurar las pantallas.", emergencyHotkey));
+            Loc.T("No hagas nada: vuelve sola la disposición anterior. O pulsa {0} para restaurar ya.", emergencyHotkey));
         Section(Loc.T("Alternar sonido"),
-            Loc.T("Un solo atajo que pasa de una salida de sonido a la siguiente, por ejemplo de los altavoces a los auriculares. Eliges qué salidas entran en el ciclo."));
+            Loc.T("Un atajo que pasa a la siguiente salida de sonido, p. ej. de altavoces a auriculares."));
         Section(Loc.T("Modo avanzado"),
-            Loc.T("Añade la tele LG (encender, apagar, entrada), acciones extra al aplicar (programas, enlaces y llamadas web), un atajo de mando y las reglas automáticas."));
+            Loc.T("Tele LG, acciones extra al aplicar, atajo de mando y reglas automáticas."));
         Section(Loc.T("Reglas automáticas"),
-            Loc.T("Aplican un perfil o cambian la salida de sonido cuando un programa se abre o se cierra. Por ejemplo, al abrir Steam Big Picture pasar al perfil de la tele, y al cerrarlo volver al anterior."));
+            Loc.T("Aplican un perfil o cambian el sonido al abrir o cerrar un programa. Ej.: Steam Big Picture → perfil TV; al cerrarlo, vuelve el anterior."));
         Section(Loc.T("Animaciones"),
-            Loc.T("La app respeta la opción de Windows «Efectos de animación». Si la tienes desactivada, no verás movimiento. Con el engranaje de abajo a la derecha puedes elegir «Siempre activadas» o «Desactivadas»."));
+            Loc.T("Sigue la opción «Efectos de animación» de Windows. Con el engranaje puedes forzarlas o desactivarlas."));
         Section(Loc.T("Datos"),
             Loc.T("Tus perfiles y ajustes se guardan en %AppData%\\ScreenSoundSwitcher."));
 

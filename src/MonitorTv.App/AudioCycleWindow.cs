@@ -29,7 +29,7 @@ public sealed class AudioCycleWindow : FluentWindow
 
         var intro = new System.Windows.Controls.TextBlock
         {
-            Text = Loc.T("Un solo atajo pasa de una salida de sonido a la siguiente. Marca las que quieras alternar, por ejemplo altavoces y auriculares."),
+            Text = Loc.T("Un atajo pasa a la siguiente salida de sonido. Marca las que alternar, p. ej. altavoces y auriculares."),
             TextWrapping = TextWrapping.Wrap,
             Opacity = 0.75,
             Margin = new Thickness(0, 0, 0, 14),

@@ -51,18 +51,12 @@ public partial class MainWindow : FluentWindow
     public MainWindow()
     {
         InitializeComponent();
-        // icon only; the text lives in the tooltip and the accessible name (Spanish source text, translated with the rest)
-        KofiButton.Content = BrandIcons.Kofi(18);
-        KofiButton.ToolTip = "Invitar a un café en Ko-fi";
-        System.Windows.Automation.AutomationProperties.SetName(KofiButton, "Invitar a un café en Ko-fi");
-        GitHubButton.Content = BrandIcons.GitHub(18);
-        GitHubButton.ToolTip = "Código en GitHub";
-        System.Windows.Automation.AutomationProperties.SetName(GitHubButton, "Código en GitHub");
         // anything on the profile screen that can be edited marks the profile as changed
         Details.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => UpdateDirty()));
         Details.AddHandler(System.Windows.Controls.Primitives.Selector.SelectionChangedEvent, new SelectionChangedEventHandler((_, _) => UpdateDirty()));
         Details.AddHandler(System.Windows.Controls.Primitives.ToggleButton.ClickEvent, new RoutedEventHandler((_, _) => UpdateDirty()));
         Arrangement.Changed += UpdateDirty;
+        AudioCombo.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => SyncAudioChips()));
         LocTree.Translate(this);
         ApplyTheme();
         var accent = Color.FromRgb(0x0A, 0x84, 0xFF);
@@ -73,8 +67,8 @@ public partial class MainWindow : FluentWindow
 
         var icon = BuildIcon();
         Icon = icon;
-        TrayIcon.Icon = icon;
-        AppTitleBar.Icon = new ImageIcon { Source = IconArt.Render(32), Width = 16, Height = 16 };
+        TrayIcon.Icon = IconArt.RenderSimple(32);
+        AppTitleBar.Icon = IconArt.TitleIcon();
 
         Loaded += (_, _) =>
         {
@@ -103,7 +97,7 @@ public partial class MainWindow : FluentWindow
         {
             ProfileList.ItemsSource = items;
             EmptyText.Text = items.Count == 0
-                ? Loc.T("Aún no tienes perfiles. Coloca tus pantallas como las quieres en Windows y pulsa «Crear con los monitores actuales».")
+                ? Loc.T("Aún no hay perfiles. Colócalo todo en Windows y pulsa «Crear con los monitores actuales».")
                 : Loc.T("Selecciona un perfil de la lista para editarlo.");
             ProfileList.SelectedItem = items.FirstOrDefault(i => i.Name == select);
         }
@@ -114,8 +108,8 @@ public partial class MainWindow : FluentWindow
         // after the window has finished loading, so the notice is not overwritten by the initial footer text
         if (damaged.Count > 0)
             Dispatcher.BeginInvoke(() => Status(damaged.Count == 1
-                    ? Loc.T("No se pudo leer el perfil '{0}': su archivo está dañado. No se ha borrado; puedes arreglarlo o quitarlo de la carpeta {1}.", damaged[0], _store.Root)
-                    : Loc.T("No se pudieron leer {0} perfiles porque sus archivos están dañados ({1}). No se han borrado; están en la carpeta {2}.", damaged.Count, string.Join(", ", damaged), _store.Root),
+                    ? Loc.T("Perfil '{0}' dañado, no se puede leer. No se borró: arréglalo o quítalo de la carpeta {1}.", damaged[0], _store.Root)
+                    : Loc.T("{0} perfiles dañados ({1}), no se pueden leer. No se borraron: están en la carpeta {2}.", damaged.Count, string.Join(", ", damaged), _store.Root),
                     NoticeKind.Warning),
                 System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
@@ -160,6 +154,33 @@ public partial class MainWindow : FluentWindow
         p.TvPower = TvPowerOptions[Math.Max(0, TvPowerCombo.SelectedIndex)].Value;
         p.TvInput = TvInputOptions[Math.Max(0, TvInputCombo.SelectedIndex)].Value;
         p.Launch = LaunchBox.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+    }
+
+    /// <summary>The active outputs as chips, a click away; the editable box stays for outputs that are not connected yet.</summary>
+    private void BuildAudioChips(IEnumerable<string> outputs)
+    {
+        AudioChips.Children.Clear();
+        foreach (var name in outputs)
+        {
+            var chip = new System.Windows.Controls.Primitives.ToggleButton
+            {
+                Content = name,
+                Tag = name,
+                Style = (Style)FindResource("Chip"),
+                MaxWidth = 260,
+            };
+            System.Windows.Automation.AutomationProperties.SetName(chip, name);
+            chip.Click += (_, _) => { AudioCombo.Text = name; SyncAudioChips(); };
+            AudioChips.Children.Add(chip);
+        }
+        SyncAudioChips();
+    }
+
+    private void SyncAudioChips()
+    {
+        var current = AudioCombo.Text.Trim();
+        foreach (System.Windows.Controls.Primitives.ToggleButton chip in AudioChips.Children)
+            chip.IsChecked = current.Length > 0 && ((string)chip.Tag).Contains(current, StringComparison.OrdinalIgnoreCase);
     }
 
     private void UpdateDirty()
@@ -212,9 +233,15 @@ public partial class MainWindow : FluentWindow
         SetGroupOpen("Tv", p.TvPower != null || p.TvInput != null);
         SetGroupOpen("Launch", p.Launch.Any(l => !string.IsNullOrWhiteSpace(l)));
             // The pane scrolls back to its top and the settings cascade in, so it is obvious another profile is showing.
-            Motion.ScrollToTop(Details);
-            if (content is Panel panel) Motion.Cascade(panel);
-            Motion.Pop(DetailTile);
+            // Arrowing through the list is a keyboard action repeated all day: it changes instantly, with no movement.
+            if (System.Windows.Input.InputManager.Current.MostRecentInputDevice is System.Windows.Input.KeyboardDevice)
+                Details.ScrollToVerticalOffset(0);
+            else
+            {
+                Motion.ScrollToTop(Details);
+                if (content is Panel panel) Motion.Cascade(panel);
+                Motion.Pop(DetailTile);
+            }
         }
         DetailName.Text = p.Name;
         if (ProfileList.SelectedItem is ProfileItem selectedItem)
@@ -228,8 +255,10 @@ public partial class MainWindow : FluentWindow
             ? (p.Monitors.PathCount == 1 ? Loc.T("1 pantalla guardada") : Loc.T("{0} pantallas guardadas", p.Monitors.PathCount))
             : Loc.T("No se cambian los monitores");
 
-        AudioCombo.ItemsSource = AudioOutputs.List().Select(o => o.Name).ToList();
+        var outputs = AudioOutputs.List().Select(o => o.Name).ToList();
+        AudioCombo.ItemsSource = outputs;
         AudioCombo.Text = p.AudioOutput ?? "";
+        BuildAudioChips(outputs);
         HotkeyBox.Text = p.Hotkey ?? "";
         SetCombo(p.ControllerCombo);
         Arrangement.Load(p.Monitors);
@@ -434,7 +463,7 @@ public partial class MainWindow : FluentWindow
     {
         if (_comboMask is not { } mask)
         {
-            ControllerHint.Text = Loc.T("Sin combinación: este perfil no se activa con el mando. Elige una propuesta o crea la tuya.");
+            ControllerHint.Text = Loc.T("Sin combinación: el mando no activa este perfil. Elige una o crea la tuya.");
             return;
         }
 
@@ -817,6 +846,22 @@ public partial class MainWindow : FluentWindow
 
         Section(Loc.T("Sistema"));
         menu.Items.Add(Choice(Loc.T("Iniciar con Windows"), Autostart.IsEnabled, ToggleAutostart));
+        if (AppInfo.KofiUrl != "" || AppInfo.GitHubRepo != "")
+        {
+            menu.Items.Add(new Separator());
+            if (AppInfo.KofiUrl != "")
+            {
+                var kofi = new System.Windows.Controls.MenuItem { Header = Loc.T("Invitar a un café en Ko-fi"), Icon = BrandIcons.Kofi() };
+                kofi.Click += (_, _) => OpenLink(AppInfo.KofiUrl);
+                menu.Items.Add(kofi);
+            }
+            if (AppInfo.GitHubRepo != "")
+            {
+                var git = new System.Windows.Controls.MenuItem { Header = Loc.T("Código en GitHub"), Icon = BrandIcons.GitHub() };
+                git.Click += (_, _) => OpenLink(AppInfo.RepoUrl);
+                menu.Items.Add(git);
+            }
+        }
         return menu;
     }
 
@@ -993,7 +1038,7 @@ public partial class MainWindow : FluentWindow
                     // Something keeps changing them back: fighting it would make the screens flash, so step aside for a while.
                     _guardQuietUntil = DateTime.Now.AddMinutes(5);
                     _restores.Clear();
-                    Status(Loc.T("Windows sigue cambiando tus pantallas. Dejo de intervenir unos minutos."), NoticeKind.Warning);
+                    Status(Loc.T("Windows sigue cambiando tus pantallas. Pauso unos minutos."), NoticeKind.Warning);
                     _connected = after;
                     return;
                 }
@@ -1003,7 +1048,7 @@ public partial class MainWindow : FluentWindow
                 DisplayConfig.Apply(plan);
                 _guardQuietUntil = DateTime.Now.AddSeconds(8);
                 var gone = before.Where(p => !after.Contains(p)).Select(p => _monitorNames.GetValueOrDefault(p, Loc.T("una pantalla")));
-                Status(Loc.T("Se desconectó «{0}» y Windows cambió tus pantallas; las he dejado como estaban.", string.Join(", ", gone)), NoticeKind.Info);
+                Status(Loc.T("Se desconectó «{0}»: dejé tus pantallas como estaban.", string.Join(", ", gone)), NoticeKind.Info);
                 _connected = after;
                 return;
             }
@@ -1029,7 +1074,7 @@ public partial class MainWindow : FluentWindow
     private void ShowSafetyNoticeOnce()
     {
         if (_settings.SafetyNoticeSeen) return;
-        SafetyText.Text = Loc.T("Si un perfil puede dejarte sin imagen, verás una cuenta atrás para confirmar el cambio; si no lo confirmas, se vuelve sola a la disposición anterior. Si algo va mal y no ves nada, pulsa {0} para restaurarlas.", _settings.EmergencyHotkey);
+        SafetyText.Text = Loc.T("Si un perfil puede dejarte sin imagen, verás una cuenta atrás. Sin confirmar, vuelve la disposición anterior. Si no ves nada, pulsa {0}.", _settings.EmergencyHotkey);
         SafetyBanner.Visibility = Visibility.Visible;
         Motion.Reveal(SafetyBanner, -6);
     }
@@ -1131,18 +1176,11 @@ public partial class MainWindow : FluentWindow
     {
         SetUpFooterText();
         VersionText.Text = AppInfo.VersionText;
-        KofiButton.Visibility = AppInfo.KofiUrl != "" ? Visibility.Visible : Visibility.Collapsed;
-        GitHubButton.Visibility = AppInfo.GitHubRepo != "" ? Visibility.Visible : Visibility.Collapsed;
-        LinksGap.Visibility = AppInfo.KofiUrl != "" || AppInfo.GitHubRepo != "" ? Visibility.Visible : Visibility.Collapsed;
         if (AppInfo.GitHubRepo != "") _ = CheckForUpdates(manual: false);
     }
 
     private static void OpenLink(string url) =>
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
-
-    private void Kofi_Click(object sender, RoutedEventArgs e) => OpenLink(AppInfo.KofiUrl);
-
-    private void GitHub_Click(object sender, RoutedEventArgs e) => OpenLink(AppInfo.RepoUrl);
 
     private async Task CheckForUpdates(bool manual)
     {

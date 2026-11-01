@@ -164,7 +164,7 @@ public static class ProfileRunner
         {
             var missing = DisplayIdentity.MissingMonitors(profile.Monitors);
             if (missing.Count > 0)
-                throw new InvalidOperationException(Loc.T("Un monitor de este perfil no está conectado ahora mismo ({0} sin detectar).", missing.Count));
+                throw new InvalidOperationException(Loc.T("Falta un monitor de este perfil ({0} sin detectar).", missing.Count));
 
             var before = DisplayConfig.Capture();
             // already like this (a rule fired again, the shortcut pressed twice): no flicker and no pointless countdown

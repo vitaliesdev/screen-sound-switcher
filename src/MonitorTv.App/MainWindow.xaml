@@ -64,11 +64,85 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Frosted glass without a blur per card (WPF has none): the window's Mica is the blur, these are translucent layers on top. -->
         <Style x:Key="Group" TargetType="Border">
-            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="CornerRadius" Value="16" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GlassEdge}" />
+        </Style>
+        <Style x:Key="PanelBg" TargetType="Border">
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Opacity" Value="0.5" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
+        </Style>
+        <Style x:Key="PanelEdge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GlassEdge}" />
+        </Style>
+        <!-- an output of the sound card as a chip: one click instead of a drop-down -->
+        <Style x:Key="Chip" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" CornerRadius="16" MinHeight="32" Padding="14,0" BorderThickness="1"
+                                RenderTransformOrigin="0.5,0.5"
+                                Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
+                            <Border.RenderTransform>
+                                <ScaleTransform x:Name="Press" ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
+                            <ContentPresenter x:Name="Cp" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0:0:0.1" />
+                                            <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0:0:0.1" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.16">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <ExponentialEase EasingMode="EaseOut" Exponent="5" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.16">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <ExponentialEase EasingMode="EaseOut" Exponent="5" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="Transparent" />
+                                <Setter TargetName="Cp" Property="TextElement.Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                                <Setter TargetName="Cp" Property="TextElement.FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="Divider" TargetType="Border">
             <Setter Property="Height" Value="1" />
@@ -78,14 +152,11 @@
         <Style x:Key="GroupTitle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="Opacity" Value="0.8" />
             <Setter Property="Margin" Value="4,20,0,8" />
         </Style>
     </ui:FluentWindow.Resources>
     <Grid>
-        <!-- colour wash under everything -->
-        <Rectangle Fill="{StaticResource WindowWash}" IsHitTestVisible="False" />
-
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -121,12 +192,15 @@
             <Grid Grid.Row="2" Margin="20,8,20,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="270" />
-                    <ColumnDefinition Width="22" />
+                    <ColumnDefinition Width="14" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Profile list + new profile -->
-                <DockPanel Grid.Column="0">
+                <!-- Profile list + new profile, on a frosted panel -->
+                <Grid Grid.Column="0">
+                <Border Style="{StaticResource PanelBg}" />
+                <Border Style="{StaticResource PanelEdge}" />
+                <DockPanel Margin="14">
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
                         <DockPanel Margin="0,0,0,12">
                             <ui:Button DockPanel.Dock="Right" Appearance="Transparent" Icon="{ui:SymbolIcon QuestionCircle24}"
@@ -134,12 +208,13 @@
                             <TextBlock Text="Perfiles" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" />
                         </DockPanel>
                         <ui:TextBox x:Name="NewName" PlaceholderText="Nombre del perfil nuevo" Margin="0,0,0,8" />
-                        <ui:Button x:Name="CreateButton" Content="Crear con los monitores actuales"
-                                   Icon="{ui:SymbolIcon Add24}" HorizontalAlignment="Stretch" Appearance="Primary"
-                                   Click="Create_Click" />
+                        <ui:Button x:Name="CreateButton" Icon="{ui:SymbolIcon Add24}" HorizontalAlignment="Stretch" Appearance="Primary"
+                                   Click="Create_Click">
+                            <TextBlock Text="Crear con los monitores actuales" TextWrapping="Wrap" TextAlignment="Center" />
+                        </ui:Button>
                         <ui:Button x:Name="DesignButton" Content="Diseñar pantallas…" Margin="0,8,0,0"
                                    Icon="{ui:SymbolIcon DesignIdeas24}" HorizontalAlignment="Stretch" Click="Design_Click"
-                                   ToolTip="Crea un perfil colocando las pantallas aquí, sin cambiar las que tienes ahora mismo." />
+                                   ToolTip="Crea un perfil colocando las pantallas aquí. No toca las actuales." />
                     </StackPanel>
                     <ui:Button x:Name="AudioCycleButton" DockPanel.Dock="Bottom" Content="Alternar sonido…" ToolTip="Un atajo que pasa de una salida de sonido a la siguiente" Margin="0,8,0,0"
                                HorizontalAlignment="Stretch" Icon="{ui:SymbolIcon Speaker224}" Click="AudioCycle_Click" />
@@ -156,13 +231,13 @@
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListViewItem">
                                             <Grid Margin="0,0,0,6">
-                                                <Border x:Name="Bd" Padding="12,10" CornerRadius="12"
-                                                        BorderThickness="1" BorderBrush="Transparent"
+                                                <Border x:Name="Bd" Padding="11,9" CornerRadius="16"
+                                                        BorderThickness="2" BorderBrush="Transparent"
                                                         Background="{DynamicResource ControlFillColorDefaultBrush}">
                                                     <ContentPresenter />
                                                 </Border>
                                                 <!-- accent tint for the selected profile -->
-                                                <Border x:Name="Tint" CornerRadius="12" IsHitTestVisible="False" Opacity="0"
+                                                <Border x:Name="Tint" CornerRadius="16" IsHitTestVisible="False" Opacity="0"
                                                         Background="{DynamicResource AccentFillColorDefaultBrush}" />
                                             </Grid>
                                             <ControlTemplate.Triggers>
@@ -208,16 +283,16 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="38" Height="38" CornerRadius="10" Margin="0,0,12,0" VerticalAlignment="Center"
+                                    <Border Width="38" Height="38" CornerRadius="12" Margin="0,0,12,0" VerticalAlignment="Center"
                                             Background="{Binding TileBrush}">
                                         <ui:SymbolIcon Symbol="{Binding Symbol}" FontSize="20" Foreground="White" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        <TextBlock Text="{Binding Summary}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"
+                                        <TextBlock Text="{Binding Summary}" FontSize="12" Opacity="0.75" TextTrimming="CharacterEllipsis"
                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        <TextBlock Text="{Binding HotkeyText}" FontSize="11" Opacity="0.65" Margin="0,2,0,0"
+                                        <TextBlock Text="{Binding HotkeyText}" FontSize="12" Opacity="0.75" Margin="0,2,0,0"
                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                                     </StackPanel>
                                 </Grid>
@@ -225,15 +300,19 @@
                         </ui:ListView.ItemTemplate>
                     </ui:ListView>
                 </DockPanel>
+                </Grid>
 
-                <!-- Details -->
+                <!-- Details, on a frosted panel -->
                 <Grid Grid.Column="2">
+                <Border Style="{StaticResource PanelBg}" />
+                <Border Style="{StaticResource PanelEdge}" />
+                <Grid Margin="18,16,6,14">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <TextBlock x:Name="EmptyText" Grid.RowSpan="2" Text="Crea un perfil o selecciona uno de la lista."
-                               VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.7"
+                               VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.78"
                                TextWrapping="Wrap" TextAlignment="Center" MaxWidth="420" Margin="24,0" />
 
                     <!-- Always in view, so applying a profile never needs a scroll to the end: title, the actions, and whether there are unsaved changes -->
@@ -247,7 +326,7 @@
                             </Border>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock x:Name="DetailName" FontSize="26" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
-                                <TextBlock x:Name="DetailKind" FontSize="12" Opacity="0.7" />
+                                <TextBlock x:Name="DetailKind" FontSize="12" Opacity="0.78" />
                             </StackPanel>
                         </DockPanel>
                         <DockPanel>
@@ -280,16 +359,16 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <Border Width="34" Height="34" CornerRadius="9" VerticalAlignment="Top" Background="{StaticResource TileBlue}">
+                                        <Border Width="34" Height="34" CornerRadius="11" VerticalAlignment="Top" Background="{StaticResource TileBlue}">
                                         <ui:SymbolIcon Symbol="Desktop24" FontSize="18" Foreground="White" />
                                     </Border>
                                         <StackPanel Grid.Column="1" Margin="14,0,12,0" VerticalAlignment="Center">
                                             <TextBlock Text="Monitores guardados" FontWeight="SemiBold" />
-                                            <TextBlock x:Name="MonitorsText" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="MonitorsText" FontSize="12" Opacity="0.78" TextWrapping="Wrap" />
                                             <!-- under the text, not beside it: in languages with longer words the title was cut off -->
                                             <WrapPanel Margin="0,10,0,0">
                                                 <ui:Button x:Name="EditScreensButton" Content="Editar pantallas…" Margin="0,0,8,6" Click="EditScreens_Click"
-                                                           ToolTip="Elige qué pantallas lleva este perfil y colócalas, sin cambiar nada ahora." />
+                                                           ToolTip="Elige y coloca las pantallas del perfil. No cambia nada ahora." />
                                                 <ui:Button x:Name="RecaptureButton" Content="Guardar los actuales" Margin="0,0,0,6" Click="Recapture_Click"
                                                            ToolTip="Sustituye la disposición guardada por la que tienes ahora mismo." />
                                             </WrapPanel>
@@ -298,8 +377,8 @@
                                     <StackPanel x:Name="ArrangementCard">
                                         <Border Style="{StaticResource Divider}" />
                                         <StackPanel Margin="16,12,16,16">
-                                            <TextBlock Text="Arrastra las pantallas para colocarlas, o selecciónalas y usa las flechas. Clic derecho o la tecla P para elegir la principal."
-                                                       FontSize="12" Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,8" />
+                                            <TextBlock Text="Arrastra para colocar, o selecciona y usa las flechas. Clic derecho o P: pantalla principal."
+                                                       FontSize="12" Opacity="0.78" TextWrapping="Wrap" Margin="0,0,0,8" />
                                             <local:ArrangementView x:Name="Arrangement" />
                                         </StackPanel>
                                     </StackPanel>
@@ -314,15 +393,17 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="34" Height="34" CornerRadius="9" VerticalAlignment="Top" Background="{StaticResource TilePink}">
+                                    <Border Width="34" Height="34" CornerRadius="11" VerticalAlignment="Top" Background="{StaticResource TilePink}">
                                         <ui:SymbolIcon Symbol="Speaker224" FontSize="18" Foreground="White" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Margin="14,0,0,0">
                                         <TextBlock Text="Salida de audio" FontWeight="SemiBold" Margin="0,0,0,8" />
                                         <ComboBox x:Name="AudioCombo" HorizontalAlignment="Stretch" IsEditable="True"
-                                                  ToolTip="Elige una salida activa o escribe parte del nombre (p. ej. LG) para salidas que aún no están conectadas." />
+                                                  ToolTip="Elige una salida o escribe parte del nombre (p. ej. LG) si aún no está conectada." />
                                         <TextBlock Text="Se espera hasta 20 s a que la salida aparezca, útil con la tele."
-                                                   FontSize="12" Opacity="0.7" Margin="0,6,0,0" />
+                                                   FontSize="12" Opacity="0.78" Margin="0,6,0,10" />
+                                        <WrapPanel x:Name="AudioChips" />
+
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -337,7 +418,7 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <Border Width="34" Height="34" CornerRadius="9" VerticalAlignment="Top" Background="{StaticResource TileIndigo}">
+                                        <Border Width="34" Height="34" CornerRadius="11" VerticalAlignment="Top" Background="{StaticResource TileIndigo}">
                                         <ui:SymbolIcon Symbol="Keyboard24" FontSize="18" Foreground="White" />
                                     </Border>
                                         <StackPanel Grid.Column="1" Margin="14,0,12,0">
@@ -355,7 +436,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <Border Width="34" Height="34" CornerRadius="9" VerticalAlignment="Top" Background="{StaticResource TileGreen}">
+                                            <Border Width="34" Height="34" CornerRadius="11" VerticalAlignment="Top" Background="{StaticResource TileGreen}">
                                         <ui:SymbolIcon Symbol="Games24" FontSize="18" Foreground="White" />
                                     </Border>
                                             <StackPanel Grid.Column="1" Margin="14,0,0,0">
@@ -364,13 +445,13 @@
                                                           SelectionChanged="ControllerPreset_Changed" />
 
                                                 <StackPanel x:Name="ControllerCustom" Visibility="Collapsed" Margin="0,10,0,0">
-                                                    <TextBlock Text="Botones de la combinación" FontSize="12" Opacity="0.7" Margin="0,0,0,6" />
+                                                    <TextBlock Text="Botones de la combinación" FontSize="12" Opacity="0.78" Margin="0,0,0,6" />
                                                     <WrapPanel x:Name="ControllerButtons" />
                                                     <ui:Button x:Name="ControllerRecord" Content="Grabar con el mando" Margin="0,10,0,0"
                                                                Icon="{ui:SymbolIcon Record24}" Click="ControllerRecord_Click" />
                                                 </StackPanel>
 
-                                                <TextBlock x:Name="ControllerHint" FontSize="12" Opacity="0.7" TextWrapping="Wrap" Margin="0,8,0,0" />
+                                                <TextBlock x:Name="ControllerHint" FontSize="12" Opacity="0.78" TextWrapping="Wrap" Margin="0,8,0,0" />
                                             </StackPanel>
                                         </Grid>
                                     </StackPanel>
@@ -391,14 +472,14 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <Border Width="34" Height="34" CornerRadius="9" VerticalAlignment="Center" Background="{StaticResource TilePurple}">
+                                                <Border Width="34" Height="34" CornerRadius="11" VerticalAlignment="Center" Background="{StaticResource TilePurple}">
                                                 <ui:SymbolIcon Symbol="Tv24" FontSize="18" Foreground="White" />
                                             </Border>
                                                 <StackPanel Grid.Column="1" Margin="14,0,12,0" VerticalAlignment="Center">
                                                     <TextBlock Text="Tele LG (webOS)" FontWeight="SemiBold" />
-                                                    <TextBlock x:Name="TvSummary" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock x:Name="TvSummary" FontSize="12" Opacity="0.78" TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
-                                                <ui:SymbolIcon x:Name="TvChevron" Grid.Column="2" Symbol="ChevronDown24" FontSize="16" Opacity="0.7"
+                                                <ui:SymbolIcon x:Name="TvChevron" Grid.Column="2" Symbol="ChevronDown24" FontSize="16" Opacity="0.78"
                                                                VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5" />
                                             </Grid>
                                         </ToggleButton>
@@ -424,7 +505,7 @@
                                                             <ui:Button Content="Guardar datos" Click="TvSave_Click" Margin="0,0,8,0" />
                                                             <ui:Button x:Name="PairButton" Content="Emparejar con la tele" Click="TvPair_Click" />
                                                         </StackPanel>
-                                                        <TextBlock x:Name="TvPairText" FontSize="12" Opacity="0.7" Margin="0,6,0,0" />
+                                                        <TextBlock x:Name="TvPairText" FontSize="12" Opacity="0.78" Margin="0,6,0,0" />
                                                     </StackPanel>
                                                 </Expander>
                                             </StackPanel>
@@ -444,14 +525,14 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <Border Width="34" Height="34" CornerRadius="9" VerticalAlignment="Center" Background="{StaticResource TileOrange}">
+                                                <Border Width="34" Height="34" CornerRadius="11" VerticalAlignment="Center" Background="{StaticResource TileOrange}">
                                                 <ui:SymbolIcon Symbol="Apps24" FontSize="18" Foreground="White" />
                                             </Border>
                                                 <StackPanel Grid.Column="1" Margin="14,0,12,0" VerticalAlignment="Center">
                                                     <TextBlock Text="Acciones extra al aplicar" FontWeight="SemiBold" />
-                                                    <TextBlock x:Name="LaunchSummary" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock x:Name="LaunchSummary" FontSize="12" Opacity="0.78" TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
-                                                <ui:SymbolIcon x:Name="LaunchChevron" Grid.Column="2" Symbol="ChevronDown24" FontSize="16" Opacity="0.7"
+                                                <ui:SymbolIcon x:Name="LaunchChevron" Grid.Column="2" Symbol="ChevronDown24" FontSize="16" Opacity="0.78"
                                                                VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5" />
                                             </Grid>
                                         </ToggleButton>
@@ -460,8 +541,8 @@
                                             <StackPanel Margin="64,14,16,16">
                                                 <ui:TextBox x:Name="LaunchBox" AcceptsReturn="True" MinLines="2" MaxLines="4" TextChanged="Summary_Changed"
                                                             PlaceholderText="steam://open/bigpicture" AutomationProperties.Name="Acciones extra, una por línea" />
-                                                <TextBlock FontSize="12" Opacity="0.7" TextWrapping="Wrap" Margin="0,6,0,0"
-                                                           Text="Una por línea: un programa con sus argumentos, un enlace (steam://…) o una llamada web (GET o POST https://… con el cuerpo opcional). Sirve para cualquier dispositivo con una API, como Home Assistant." />
+                                                <TextBlock FontSize="12" Opacity="0.78" TextWrapping="Wrap" Margin="0,6,0,0"
+                                                           Text="Una por línea: un programa con argumentos, un enlace (steam://…) o una llamada web (GET o POST https://…). Sirve para cualquier API, como Home Assistant." />
                                             </StackPanel>
                                         </StackPanel>
                                     </StackPanel>
@@ -471,6 +552,7 @@
                             <Border Height="12" />
                         </StackPanel>
                     </ScrollViewer>
+                </Grid>
                 </Grid>
             </Grid>
 
@@ -492,16 +574,11 @@
                     <StackPanel Orientation="Horizontal" Margin="-8,4,0,0">
                         <ui:Button x:Name="EmergencyButton" Appearance="Transparent" Padding="8,3" FontSize="12"
                                    Icon="{ui:SymbolIcon ArrowUndo24}" Content="Restaurar pantallas" Click="Emergency_Click"
-                                   ToolTip="Vuelve a la última disposición que confirmaste. También funciona con el atajo, aunque la ventana esté cerrada." />
+                                   ToolTip="Vuelve a la última disposición confirmada. Funciona también con el atajo y la ventana cerrada." />
                         <StackPanel x:Name="EmergencyKeys" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- the project links, icon only (their official marks, set in code), apart from the app's own controls -->
-                    <ui:Button x:Name="KofiButton" Appearance="Transparent" Visibility="Collapsed" Margin="0,0,6,0" Click="Kofi_Click" />
-                    <ui:Button x:Name="GitHubButton" Appearance="Transparent" Visibility="Collapsed" Margin="0,0,6,0" Click="GitHub_Click" />
-                    <Border x:Name="LinksGap" Width="1" Height="20" Margin="14,0,14,0" Opacity="0.25" Visibility="Collapsed"
-                            Background="{DynamicResource TextFillColorPrimaryBrush}" />
                     <ui:Button x:Name="ThemeButton" Appearance="Transparent" Icon="{ui:SymbolIcon WeatherMoon24}" Margin="0,0,4,0"
                                ToolTip="Cambiar entre tema claro y oscuro" Click="Theme_Click" />
                     <ui:Button x:Name="SettingsButton" Appearance="Transparent" Icon="{ui:SymbolIcon Settings24}" Margin="0,0,4,0"
@@ -510,7 +587,7 @@
                                ToolTip="Últimos mensajes" Click="History_Click" />
                     <ui:Button x:Name="UpdateButton" Appearance="Primary" Icon="{ui:SymbolIcon ArrowDownload24}"
                                Visibility="Collapsed" Margin="0,0,8,0" Click="Update_Click" />
-                    <TextBlock x:Name="VersionText" Opacity="0.65" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    <TextBlock x:Name="VersionText" Opacity="0.75" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0" />
                 </StackPanel>
             </Grid>
 

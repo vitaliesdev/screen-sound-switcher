@@ -33,9 +33,21 @@ public partial class App : Application
         old?.CloseForReal();
     }
 
+    /// <summary>The panel edge is a light line on dark and a dark hairline on light: white would vanish against a pale window.</summary>
+    private static void SetGlassEdge(bool light)
+    {
+        var brush = new System.Windows.Media.LinearGradientBrush(
+            light ? System.Windows.Media.Color.FromArgb(0x2E, 0, 0, 0) : System.Windows.Media.Color.FromArgb(0x59, 255, 255, 255),
+            light ? System.Windows.Media.Color.FromArgb(0x14, 0, 0, 0) : System.Windows.Media.Color.FromArgb(0x14, 255, 255, 255),
+            new Point(0, 0), new Point(0, 1));
+        brush.Freeze();
+        Current.Resources["GlassEdge"] = brush;
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        Wpf.Ui.Appearance.ApplicationThemeManager.Changed += (theme, _) => SetGlassEdge(theme == Wpf.Ui.Appearance.ApplicationTheme.Light);
         MonitorTv.Core.Loc.Use(MonitorTv.Core.AppSettings.Load().Language);
 
         // A bug must never close a tray app silently: keep running, say what happened and keep the details in error.log.

@@ -42,7 +42,7 @@ public sealed class RulesWindow : FluentWindow
 
         var intro = new System.Windows.Controls.TextBlock
         {
-            Text = Loc.T("Cambia de perfil o de salida de sonido cuando un programa se abre o se cierra, por ejemplo Steam Big Picture → perfil TV, y al cerrarlo volver a como estaba. Un programa se reconoce por el nombre de su proceso (steam.exe) o por parte del título de su ventana.") +
+            Text = Loc.T("Cambia de perfil o de sonido al abrir o cerrar un programa. Ej.: Steam Big Picture → perfil TV; al cerrarlo, vuelve el anterior. Se reconoce por el proceso (steam.exe) o parte del título.") +
                    (_arctisPresent ? " " + Loc.T("Con «Auriculares Arctis» la regla se activa al encender o apagar los auriculares.") : ""),
             TextWrapping = TextWrapping.Wrap,
             Opacity = 0.75,

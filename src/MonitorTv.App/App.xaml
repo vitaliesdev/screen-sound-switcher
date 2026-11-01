@@ -40,11 +40,10 @@
                 <GradientStop Color="#0A8F8A" Offset="1" />
             </LinearGradientBrush>
 
-            <!-- Soft colour wash behind the window; Mica shows through. -->
-            <LinearGradientBrush x:Key="WindowWash" StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#2A0A84FF" Offset="0" />
-                <GradientStop Color="#00000000" Offset="0.45" />
-                <GradientStop Color="#22BF5AF2" Offset="1" />
+            <!-- A light edge, brighter on top: what makes a translucent panel read as glass. -->
+            <LinearGradientBrush x:Key="GlassEdge" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#59FFFFFF" Offset="0" />
+                <GradientStop Color="#14FFFFFF" Offset="1" />
             </LinearGradientBrush>
         </ResourceDictionary>
     </Application.Resources>

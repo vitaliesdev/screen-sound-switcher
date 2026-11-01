@@ -38,7 +38,7 @@ public sealed class ArrangementView : Border
     public ArrangementView()
     {
         Height = 220;
-        CornerRadius = new CornerRadius(6);
+        CornerRadius = new CornerRadius(16);
         BorderThickness = new Thickness(1);
         SetResourceReference(BackgroundProperty, "ControlFillColorDefaultBrush");
         SetResourceReference(BorderBrushProperty, "ControlStrokeColorDefaultBrush");

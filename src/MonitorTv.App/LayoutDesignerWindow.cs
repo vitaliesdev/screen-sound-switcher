@@ -46,7 +46,7 @@ public sealed class LayoutDesignerWindow : FluentWindow
 
         var intro = new System.Windows.Controls.TextBlock
         {
-            Text = Loc.T("Marca las pantallas que quieres en este perfil y colócalas arrastrándolas. No se cambia nada en tus pantallas hasta que apliques el perfil."),
+            Text = Loc.T("Marca las pantallas del perfil y arrástralas a su sitio. No se cambia nada hasta que lo apliques."),
             TextWrapping = TextWrapping.Wrap,
             Opacity = 0.75,
             Margin = new Thickness(0, 0, 0, 14),
@@ -79,11 +79,13 @@ public sealed class LayoutDesignerWindow : FluentWindow
         var body = new Grid();
         body.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(250) });
         body.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        body.Children.Add(new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        var listPanel = Glass(new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }, new Thickness(18, 16, 0, 16));
+        listPanel.Margin = new Thickness(0, 0, 16, 0);
+        body.Children.Add(listPanel);
         var right = new StackPanel();
         right.Children.Add(new System.Windows.Controls.TextBlock
         {
-            Text = Loc.T("Arrastra las pantallas para colocarlas, o selecciónalas y usa las flechas. Clic derecho o la tecla P para elegir la principal."),
+            Text = Loc.T("Arrastra para colocar, o selecciona y usa las flechas. Clic derecho o P: pantalla principal."),
             FontSize = 12, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8),
         });
         right.Children.Add(_arrangement);
@@ -121,6 +123,22 @@ public sealed class LayoutDesignerWindow : FluentWindow
         StartingSelection();
         _building = false;
         Rebuild();
+    }
+
+    /// <summary>A frosted panel: translucent window colour with a light edge, brighter on top.</summary>
+    private static Grid Glass(UIElement content, Thickness padding)
+    {
+        var grid = new Grid();
+        var back = new Border { CornerRadius = new CornerRadius(22), Opacity = 0.5, IsHitTestVisible = false };
+        back.SetResourceReference(Border.BackgroundProperty, "ApplicationBackgroundBrush");
+        grid.Children.Add(back);
+        grid.Children.Add(new Border
+        {
+            CornerRadius = new CornerRadius(22), BorderThickness = new Thickness(1), IsHitTestVisible = false,
+            BorderBrush = (System.Windows.Media.Brush)Application.Current.FindResource("GlassEdge"),
+        });
+        grid.Children.Add(new Border { Padding = padding, Child = content });
+        return grid;
     }
 
     /// <summary>Development aid: renders the editor off-screen to a PNG.</summary>
